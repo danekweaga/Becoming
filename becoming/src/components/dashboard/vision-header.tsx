@@ -1,0 +1,70 @@
+import Link from 'next/link'
+import { PenLine } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Gem, accentHue } from '@/components/becoming/gem'
+import { vision, currentSeason, seasonStats, user } from '@/lib/mock-data'
+
+export function VisionHeader() {
+  const hue = accentHue[currentSeason.accent]
+  return (
+    <section className="glass-strong relative overflow-hidden rounded-[2rem] p-7 sm:p-10">
+      <div
+        className="pointer-events-none absolute -top-28 -right-16 size-72 rounded-full blur-3xl"
+        style={{ background: `oklch(0.8 0.1 ${hue} / 0.2)` }}
+        aria-hidden="true"
+      />
+      <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-xs tracking-widest text-muted-foreground uppercase">
+            {user.name}&apos;s year of {vision.word} · {vision.year}
+          </p>
+          <h1 className="mt-4 font-serif text-3xl leading-[1.15] font-light tracking-tight text-balance sm:text-4xl">
+            &ldquo;{vision.statement}&rdquo;
+          </h1>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {vision.themes.map((t) => (
+              <span
+                key={t}
+                className="rounded-full border border-border bg-card/40 px-3 py-1 text-xs text-muted-foreground"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-5 rounded-3xl border border-border bg-card/30 p-5">
+          <Gem size={72} hue={hue} />
+          <div>
+            <p className="text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
+              Current chapter · {currentSeason.symbol}
+            </p>
+            <p className="font-serif text-2xl font-medium tracking-tight">
+              {currentSeason.name}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Day {seasonStats.daysIn} of {seasonStats.totalDays}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative mt-8 flex flex-wrap items-center gap-3">
+        <Button
+          className="gem-glow bg-primary text-primary-foreground hover:bg-primary/90"
+          render={
+            <Link href="/check-in">
+              <PenLine className="size-4" />
+              Today&apos;s check-in
+            </Link>
+          }
+        />
+        <Button
+          variant="outline"
+          className="border-border bg-card/30"
+          render={<Link href="/wrapped">Preview this season&apos;s Becoming</Link>}
+        />
+      </div>
+    </section>
+  )
+}
