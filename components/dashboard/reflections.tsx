@@ -1,5 +1,6 @@
 import { Quote } from 'lucide-react'
-import { recentLogs, moodFor } from '@/lib/mock-data'
+import { moodFor } from '@/lib/mock-data'
+import { getRecentLogs } from '@/lib/dashboard-stats'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -10,6 +11,7 @@ function formatDate(iso: string) {
 }
 
 export function Reflections() {
+  const recentLogs = getRecentLogs(3)
   return (
     <section className="glass rounded-3xl p-7">
       <h2 className="mb-5 font-serif text-xl font-medium tracking-tight">

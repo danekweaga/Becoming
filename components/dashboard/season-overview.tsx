@@ -1,6 +1,7 @@
 import { Flame } from 'lucide-react'
 import { ProgressRing } from '@/components/becoming/progress-ring'
-import { currentSeason, seasonStats } from '@/lib/mock-data'
+import { currentSeason } from '@/lib/mock-data'
+import { dashboardStats } from '@/lib/dashboard-stats'
 import { accentHue } from '@/components/becoming/gem'
 
 const HABIT_HUES: Record<string, number> = {
@@ -13,32 +14,35 @@ const HABIT_HUES: Record<string, number> = {
 
 export function SeasonOverview() {
   const seasonHue = accentHue[currentSeason.accent]
+  const { seasonScore, habitsHonored, longestStreak, habitCompletionRates } =
+    dashboardStats
   return (
     <section className="grid gap-5 lg:grid-cols-[320px_1fr]">
-      {/* consistency ring */}
+      {/* season score ring */}
       <div className="glass flex flex-col items-center justify-center rounded-3xl p-8 text-center">
         <ProgressRing
-          value={seasonStats.consistency}
+          value={seasonScore / 100}
           size={168}
           strokeWidth={11}
           color={`oklch(0.83 0.11 ${seasonHue})`}
         >
           <span className="font-serif text-4xl font-medium">
-            {Math.round(seasonStats.consistency * 100)}%
+            {Math.round(seasonScore)}%
           </span>
           <span className="text-xs tracking-wide text-muted-foreground">
-            consistency
+            season score
           </span>
         </ProgressRing>
+        <p className="mt-4 text-sm text-primary">{dashboardStats.gemLevel}</p>
         <div className="mt-6 grid w-full grid-cols-2 gap-3">
           <div className="rounded-2xl border border-border bg-card/30 p-3">
-            <p className="font-serif text-2xl">{seasonStats.habitsHonored}</p>
+            <p className="font-serif text-2xl">{habitsHonored}</p>
             <p className="text-[11px] text-muted-foreground">habits honored</p>
           </div>
           <div className="rounded-2xl border border-border bg-card/30 p-3">
             <p className="flex items-center justify-center gap-1 font-serif text-2xl">
               <Flame className="size-4 text-primary" />
-              {seasonStats.longestStreak}
+              {longestStreak}
             </p>
             <p className="text-[11px] text-muted-foreground">longest streak</p>
           </div>
@@ -58,16 +62,17 @@ export function SeasonOverview() {
         <ul className="divide-y divide-border">
           {currentSeason.habits.map((h) => {
             const hue = HABIT_HUES[h.accent] ?? 78
+            const completionRate = habitCompletionRates[h.id] ?? 0
             return (
               <li key={h.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
                 <ProgressRing
-                  value={h.completionRate}
+                  value={completionRate}
                   size={52}
                   strokeWidth={5}
                   color={`oklch(0.82 0.1 ${hue})`}
                 >
                   <span className="text-[11px] font-medium">
-                    {Math.round(h.completionRate * 100)}
+                    {Math.round(completionRate * 100)}
                   </span>
                 </ProgressRing>
                 <div className="min-w-0 flex-1">

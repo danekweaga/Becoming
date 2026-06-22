@@ -11,10 +11,10 @@ import Strands from '@/components/becoming/strands'
 import {
   vision,
   currentSeason,
-  seasonStats,
   wrappedStats,
   wrappedMoments,
 } from '@/lib/mock-data'
+import { dashboardStats } from '@/lib/dashboard-stats'
 import { accentHue } from '@/components/becoming/gem'
 
 const seasonSlides: Slide[] = [
@@ -23,22 +23,22 @@ const seasonSlides: Slide[] = [
     hue: accentHue[currentSeason.accent],
     kicker: `${currentSeason.symbol} · Season recap`,
     title: 'This Season’s Becoming',
-    body: `${currentSeason.name} — ${seasonStats.daysIn} days of showing up.`,
+    body: `${currentSeason.name} — ${dashboardStats.daysIn} days of showing up.`,
   },
   {
     kind: 'stat',
     hue: 78,
-    stat: { label: 'Habits honored', value: `${seasonStats.habitsHonored}`, caption: 'small acts, quietly compounding' },
+    stat: { label: 'Habits honored', value: `${dashboardStats.habitsHonored}`, caption: 'small acts, quietly compounding' },
   },
   {
     kind: 'stat',
     hue: 20,
-    stat: { label: 'Longest streak', value: `${seasonStats.longestStreak}`, caption: 'days of devotion, unbroken' },
+    stat: { label: 'Longest streak', value: `${dashboardStats.longestStreak}`, caption: 'days of devotion, unbroken' },
   },
   {
     kind: 'stat',
     hue: 198,
-    stat: { label: 'Consistency', value: `${Math.round(seasonStats.consistency * 100)}%`, caption: 'of days you kept your word' },
+    stat: { label: 'Season score', value: `${Math.round(dashboardStats.seasonScore)}%`, caption: dashboardStats.gemLevel },
   },
   {
     kind: 'moment',
@@ -179,7 +179,7 @@ export default function WrappedPage() {
             This Season&apos;s Becoming
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            {currentSeason.name} · {seasonStats.daysIn} days in
+            {currentSeason.name} · {dashboardStats.daysIn} days in
           </p>
           <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary/15 px-4 py-2 text-sm text-primary">
             <Play className="size-3.5" /> Play recap

@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { PenLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Gem, accentHue } from '@/components/becoming/gem'
-import { vision, currentSeason, seasonStats, user } from '@/lib/mock-data'
+import { vision, currentSeason, user } from '@/lib/mock-data'
+import { dashboardStats } from '@/lib/dashboard-stats'
 import Strands from '@/components/becoming/strands'
 
 export function VisionHeader() {
@@ -65,7 +66,8 @@ export function VisionHeader() {
               {currentSeason.name}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Day {seasonStats.daysIn} of {seasonStats.totalDays}
+              Day {dashboardStats.daysIn} of {dashboardStats.totalDays} ·{' '}
+              {dashboardStats.gemLevel}
             </p>
           </div>
         </div>

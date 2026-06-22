@@ -5,7 +5,8 @@ import { ArrowLeft, ArrowRight, Gem as GemIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Wordmark } from '@/components/becoming/wordmark'
 import { Gem, accentHue } from '@/components/becoming/gem'
-import { user, vision, currentSeason, seasonStats } from '@/lib/mock-data'
+import { user, vision, currentSeason } from '@/lib/mock-data'
+import { dashboardStats } from '@/lib/dashboard-stats'
 
 const stops = [
   {
@@ -86,7 +87,8 @@ export default function DemoPage() {
             “{vision.word}”
           </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            {currentSeason.name} · day {seasonStats.daysIn} · {Math.round(seasonStats.consistency * 100)}% consistency
+            {currentSeason.name} · day {dashboardStats.daysIn} ·{' '}
+            {Math.round(dashboardStats.consistency * 100)}% consistency
           </p>
         </div>
         <Button

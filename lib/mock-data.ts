@@ -1,3 +1,5 @@
+import type { DailyCheckin, SeasonGoal } from '@/lib/scoring'
+
 /**
  * Mock data layer for Becoming.
  *
@@ -244,105 +246,141 @@ export const seasons: Season[] = [
 export const currentSeason = seasons.find((s) => s.status === 'current')!
 
 /* ------------------------------------------------------------------ */
-/* Daily logs (recent stretch of the current season)                  */
+/* Season goals + 21 demo check-ins (feeds scoring.ts)                 */
 /* ------------------------------------------------------------------ */
 
-export const recentLogs: DailyLog[] = [
+export const seasonGoals: SeasonGoal[] = [
   {
-    id: 'log_0615',
-    userId: 'usr_daniel',
-    date: '2026-06-14',
-    mood: 4,
-    energy: 4,
-    sleepHours: 7.5,
-    gratitude: 'A long quiet morning and coffee on the balcony.',
-    reflection:
-      'Felt the pull to do everything at once. Chose one thing and finished it. That felt like devotion.',
-    completedHabitIds: ['sea_summer_h1', 'sea_summer_h3', 'sea_summer_h2'],
+    id: 'goal_body',
+    title: 'Move my body 36 times',
+    category: 'Health',
+    targetValue: 36,
+    currentValue: 22,
+    unit: 'sessions',
+    weight: 1,
   },
   {
-    id: 'log_0613',
-    userId: 'usr_daniel',
-    date: '2026-06-13',
-    mood: 5,
-    energy: 4,
-    sleepHours: 8,
-    gratitude: 'A long walk with an old friend.',
-    reflection: 'Connection over productivity. No regrets.',
-    completedHabitIds: ['sea_summer_h1', 'sea_summer_h4', 'sea_summer_h3'],
+    id: 'goal_craft',
+    title: '120 deep work hours',
+    category: 'Craft',
+    targetValue: 120,
+    currentValue: 58,
+    unit: 'hours',
+    weight: 1,
   },
   {
-    id: 'log_0612',
-    userId: 'usr_daniel',
-    date: '2026-06-12',
-    mood: 3,
-    energy: 3,
-    sleepHours: 6,
-    gratitude: 'Pushed through a hard afternoon.',
-    reflection: 'Low energy but showed up anyway. The streak matters more today.',
-    completedHabitIds: ['sea_summer_h3'],
+    id: 'goal_connect',
+    title: 'Reach out 36 times',
+    category: 'Connection',
+    targetValue: 36,
+    currentValue: 18,
+    unit: 'people',
+    weight: 1,
   },
 ]
 
-/* ------------------------------------------------------------------ */
-/* Derived season stats                                                */
-/* ------------------------------------------------------------------ */
+const DEMO_CHECKIN_COUNT = 21
+const DEMO_TODAY = '2026-07-12'
 
+const REFLECTIONS = [
+  'Felt the pull to do everything at once. Chose one thing and finished it.',
+  'Connection over productivity. No regrets.',
+  'Low energy but showed up anyway. The streak matters more today.',
+  'Protected the morning and let the rest of the day follow.',
+  'A scattered start, but I closed the loop before bed.',
+  'The routine is starting to feel like identity instead of effort.',
+  'Rest day energy, still honored the smallest promise.',
+  'Deep work felt easier once I stopped negotiating with myself.',
+  'Moved my body even when motivation was quiet.',
+  'Grateful for slow progress that still counts.',
+]
+
+const GRATITUDE = [
+  'a quiet morning and coffee on the balcony',
+  'a long walk with an old friend',
+  'having enough energy to study',
+  'the feeling after finishing a hard workout',
+  'a kind text from someone I miss',
+  'sunlight through the window at 6pm',
+  'choosing one thing and finishing it',
+]
+
+function createDemoDailyLogs(): DailyLog[] {
+  const habits = currentSeason.habits
+  let seed = 4242
+  const rand = () => {
+    seed = (seed * 9301 + 49297) % 233280
+    return seed / 233280
+  }
+
+  return Array.from({ length: DEMO_CHECKIN_COUNT }, (_, index) => {
+    const dayOffset = DEMO_CHECKIN_COUNT - 1 - index
+    const date = new Date(`${DEMO_TODAY}T12:00:00`)
+    date.setDate(date.getDate() - dayOffset)
+    const isoDate = date.toISOString().slice(0, 10)
+    const dow = date.getDay()
+    const weekend = dow === 0 || dow === 6
+
+    const completedHabitIds = habits
+      .filter(() => rand() > (weekend ? 0.55 : 0.3))
+      .map((habit) => habit.id)
+
+    const mood = Math.min(5, Math.max(1, Math.round(2.8 + rand() * 2.2)))
+    const energy = Math.min(5, Math.max(1, Math.round(2.5 + rand() * 2.5)))
+    const sleepHours = Math.round((6.2 + rand() * 2.3) * 2) / 2
+    const deepWorkDone = completedHabitIds.includes(`${currentSeason.id}_h3`)
+
+    return {
+      id: `log_${isoDate.replace(/-/g, '')}`,
+      userId: user.id,
+      date: isoDate,
+      mood,
+      energy,
+      sleepHours,
+      gratitude: GRATITUDE[index % GRATITUDE.length],
+      reflection: REFLECTIONS[index % REFLECTIONS.length],
+      completedHabitIds,
+      focusMinutes: deepWorkDone ? 75 + Math.round(rand() * 45) : Math.round(rand() * 40),
+      waterCups: 4 + Math.round(rand() * 4),
+    }
+  })
+}
+
+export type DemoDailyLog = DailyLog & {
+  focusMinutes: number
+  waterCups: number
+}
+
+export const demoDailyLogs = createDemoDailyLogs() as DemoDailyLog[]
+
+export function toScoringCheckins(logs: DemoDailyLog[]): DailyCheckin[] {
+  return logs.map((log) => ({
+    id: log.id,
+    checkinDate: log.date,
+    moodScore: log.mood * 2,
+    energyScore: log.energy * 2,
+    focusMinutes: log.focusMinutes,
+    waterCups: log.waterCups,
+    reflection: log.reflection,
+    habitLogs: currentSeason.habits.map((habit) => ({
+      habitId: habit.id,
+      completed: log.completedHabitIds.includes(habit.id),
+    })),
+  }))
+}
+
+export const demoCheckins = toScoringCheckins(demoDailyLogs)
+
+/** @deprecated Use dashboardStats from @/lib/dashboard-stats */
 export interface SeasonStats {
   daysIn: number
   totalDays: number
   habitsHonored: number
   longestStreak: number
-  consistency: number // 0..1
+  consistency: number
   avgMood: number
   avgEnergy: number
   avgSleep: number
-}
-
-export const seasonStats: SeasonStats = {
-  daysIn: 56,
-  totalDays: 92,
-  habitsHonored: 187,
-  longestStreak: 31,
-  consistency: 0.78,
-  avgMood: 4.1,
-  avgEnergy: 3.8,
-  avgSleep: 7.3,
-}
-
-/* ------------------------------------------------------------------ */
-/* Heatmap — deterministic ~26 weeks of activity                       */
-/* ------------------------------------------------------------------ */
-
-export function generateHeatmap(weeks = 26): HeatmapDay[] {
-  const days: HeatmapDay[] = []
-  const today = new Date('2026-06-14')
-  const total = weeks * 7
-  // simple seeded pseudo-random for stable SSR/CSR output
-  let seed = 1337
-  const rand = () => {
-    seed = (seed * 9301 + 49297) % 233280
-    return seed / 233280
-  }
-  for (let i = total - 1; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(today.getDate() - i)
-    const dow = d.getDay()
-    // gentle upward trend toward the present + weekend dips
-    const progress = (total - i) / total
-    let base = 1 + progress * 2.4
-    if (dow === 0 || dow === 6) base -= 0.8
-    const noise = rand() * 2.2 - 0.8
-    let count = Math.round(Math.max(0, Math.min(4, base + noise)))
-    // a few rest days for realism
-    if (rand() > 0.92) count = 0
-    days.push({
-      date: d.toISOString().slice(0, 10),
-      level: count,
-      count,
-    })
-  }
-  return days
 }
 
 /* ------------------------------------------------------------------ */
