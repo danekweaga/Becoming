@@ -1,0 +1,159 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String?        @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  yearlyVisions YearlyVision[]
+  seasons       Season[]
+  dailyCheckins DailyCheckin[]
+  wrappedCards  WrappedCard[]
+
+  @@map("users")
+}
+
+model YearlyVision {
+  id                String       @id @default(cuid())
+  userId            String
+  year              Int
+  yearTheme         String?
+  identityStatement String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  yearlyGoals       YearlyGoal[]
+  seasons           Season[]
+
+  @@unique([userId, year])
+  @@map("yearly_visions")
+}
+
+model YearlyGoal {
+  id          String      @id @default(cuid())
+  visionId    String
+  title       String
+  category    String
+  targetValue Float
+  currentValue Float      @default(0)
+  unit        String
+  deadline    DateTime?
+  why         String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  vision      YearlyVision @relation(fields: [visionId], references: [id], onDelete: Cascade)
+
+  @@map("yearly_goals")
+}
+
+model Season {
+  id              String         @id @default(cuid())
+  userId          String
+  visionId        String?
+  name            String
+  startDate       DateTime
+  endDate         DateTime
+  seasonIdentity  String?
+  gemType         String?
+  completionScore Float          @default(0)
+  gemLevel        String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vision          YearlyVision?  @relation(fields: [visionId], references: [id], onDelete: SetNull)
+  seasonGoals     SeasonGoal[]
+  habits          Habit[]
+  dailyCheckins   DailyCheckin[]
+  wrappedCards    WrappedCard[]
+
+  @@map("seasons")
+}
+
+model SeasonGoal {
+  id           String   @id @default(cuid())
+  seasonId     String
+  title        String
+  category     String
+  targetValue  Float
+  currentValue Float    @default(0)
+  unit         String
+  weight       Float    @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  season       Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@map("season_goals")
+}
+
+model Habit {
+  id              String      @id @default(cuid())
+  seasonId        String
+  name            String
+  category        String?
+  cadence         String
+  targetFrequency Int?
+  color           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  season          Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  habitLogs       HabitLog[]
+
+  @@map("habits")
+}
+
+model DailyCheckin {
+  id         String    @id @default(cuid())
+  userId     String
+  seasonId   String
+  checkinDate DateTime
+  moodScore  Int?
+  energyScore Int?
+  focusMinutes Int     @default(0)
+  waterCups  Int       @default(0)
+  reflection String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  season     Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  habitLogs  HabitLog[]
+
+  @@unique([seasonId, checkinDate])
+  @@map("daily_checkins")
+}
+
+model HabitLog {
+  id             String       @id @default(cuid())
+  dailyCheckinId String
+  habitId        String
+  completed      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  dailyCheckin   DailyCheckin @relation(fields: [dailyCheckinId], references: [id], onDelete: Cascade)
+  habit          Habit        @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([dailyCheckinId, habitId])
+  @@map("habit_logs")
+}
+
+model WrappedCard {
+  id          String   @id @default(cuid())
+  userId      String
+  seasonId    String
+  cardType    String
+  title       String
+  value       String
+  description String
+  sortOrder   Int
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  season      Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@map("wrapped_cards")
+}

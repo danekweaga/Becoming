@@ -1,7 +1,6 @@
 import { Flame } from 'lucide-react'
 import { ProgressRing } from '@/components/becoming/progress-ring'
-import { currentSeason } from '@/lib/mock-data'
-import { dashboardStats } from '@/lib/dashboard-stats'
+import type { DashboardData } from '@/lib/dashboard-db'
 import { accentHue } from '@/components/becoming/gem'
 
 const HABIT_HUES: Record<string, number> = {
@@ -12,10 +11,14 @@ const HABIT_HUES: Record<string, number> = {
   iris: 280,
 }
 
-export function SeasonOverview() {
-  const seasonHue = accentHue[currentSeason.accent]
+type SeasonOverviewProps = {
+  data: DashboardData
+}
+
+export function SeasonOverview({ data }: SeasonOverviewProps) {
+  const seasonHue = accentHue[data.season.accent]
   const { seasonScore, habitsHonored, longestStreak, habitCompletionRates } =
-    dashboardStats
+    data.stats
   return (
     <section className="grid gap-5 lg:grid-cols-[320px_1fr]">
       {/* season score ring */}
@@ -33,7 +36,7 @@ export function SeasonOverview() {
             season score
           </span>
         </ProgressRing>
-        <p className="mt-4 text-sm text-primary">{dashboardStats.gemLevel}</p>
+        <p className="mt-4 text-sm text-primary">{data.stats.gemLevel}</p>
         <div className="mt-6 grid w-full grid-cols-2 gap-3">
           <div className="rounded-2xl border border-border bg-card/30 p-3">
             <p className="font-serif text-2xl">{habitsHonored}</p>
@@ -56,11 +59,11 @@ export function SeasonOverview() {
             Habits this season
           </h2>
           <span className="text-xs text-muted-foreground">
-            {currentSeason.habits.length} rituals
+            {data.season.habits.length} rituals
           </span>
         </div>
         <ul className="divide-y divide-border">
-          {currentSeason.habits.map((h) => {
+          {data.season.habits.map((h) => {
             const hue = HABIT_HUES[h.accent] ?? 78
             const completionRate = habitCompletionRates[h.id] ?? 0
             return (

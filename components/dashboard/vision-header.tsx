@@ -2,12 +2,15 @@ import Link from 'next/link'
 import { PenLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Gem, accentHue } from '@/components/becoming/gem'
-import { vision, currentSeason, user } from '@/lib/mock-data'
-import { dashboardStats } from '@/lib/dashboard-stats'
+import type { DashboardData } from '@/lib/dashboard-db'
 import Strands from '@/components/becoming/strands'
 
-export function VisionHeader() {
-  const hue = accentHue[currentSeason.accent]
+type VisionHeaderProps = {
+  data: DashboardData
+}
+
+export function VisionHeader({ data }: VisionHeaderProps) {
+  const hue = accentHue[data.season.accent]
   return (
     <section className="glass-strong relative overflow-hidden rounded-[2rem] p-7 sm:p-10">
       {/* Refractive glass orb of woven light, drifting in the top-right */}
@@ -39,13 +42,13 @@ export function VisionHeader() {
       <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <p className="text-xs tracking-widest text-muted-foreground uppercase">
-            {user.name}&apos;s year of {vision.word} · {vision.year}
+            {data.user.name}&apos;s year of {data.vision.word} · {data.vision.year}
           </p>
           <h1 className="mt-4 font-serif text-3xl leading-[1.15] font-light tracking-tight text-balance sm:text-4xl">
-            &ldquo;{vision.statement}&rdquo;
+            &ldquo;{data.vision.statement}&rdquo;
           </h1>
           <div className="mt-5 flex flex-wrap gap-2">
-            {vision.themes.map((t) => (
+            {data.vision.themes.map((t) => (
               <span
                 key={t}
                 className="rounded-full border border-border bg-card/40 px-3 py-1 text-xs text-muted-foreground"
@@ -60,14 +63,14 @@ export function VisionHeader() {
           <Gem size={72} hue={hue} />
           <div>
             <p className="text-[11px] tracking-[0.2em] text-white uppercase">
-              Current chapter · {currentSeason.symbol}
+              Current chapter · {data.season.symbol}
             </p>
             <p className="font-serif text-2xl font-medium tracking-tight">
-              {currentSeason.name}
+              {data.season.name}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Day {dashboardStats.daysIn} of {dashboardStats.totalDays} ·{' '}
-              {dashboardStats.gemLevel}
+              Day {data.stats.daysIn} of {data.stats.totalDays} ·{' '}
+              {data.stats.gemLevel}
             </p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { Quote } from 'lucide-react'
 import { moodFor } from '@/lib/mock-data'
-import { getRecentLogs } from '@/lib/dashboard-stats'
+import type { DashboardData } from '@/lib/dashboard-db'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -10,15 +10,18 @@ function formatDate(iso: string) {
   })
 }
 
-export function Reflections() {
-  const recentLogs = getRecentLogs(3)
+type ReflectionsProps = {
+  data: DashboardData
+}
+
+export function Reflections({ data }: ReflectionsProps) {
   return (
     <section className="glass rounded-3xl p-7">
       <h2 className="mb-5 font-serif text-xl font-medium tracking-tight">
         Recent reflections
       </h2>
       <div className="grid gap-4 md:grid-cols-3">
-        {recentLogs.map((log) => (
+        {data.recentLogs.map((log) => (
           <article
             key={log.id}
             className="flex flex-col rounded-2xl border border-border bg-card/30 p-5"

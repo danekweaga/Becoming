@@ -6,7 +6,6 @@ import { LayoutDashboard, PenLine, Sparkles, Compass } from 'lucide-react'
 import { Wordmark } from './wordmark'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import { user } from '@/lib/mock-data'
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -15,7 +14,11 @@ const links = [
   { href: '/demo', label: 'Demo', icon: Compass },
 ]
 
-export function AppNav() {
+type AppNavProps = {
+  userName?: string
+}
+
+export function AppNav({ userName = 'Daniel' }: AppNavProps) {
   const pathname = usePathname()
 
   return (
@@ -44,11 +47,11 @@ export function AppNav() {
         </nav>
         <div className="flex items-center gap-3">
           <span className="hidden text-sm text-muted-foreground md:inline">
-            {user.name}
+            {userName}
           </span>
           <Avatar className="size-8 ring-1 ring-primary/30">
             <AvatarFallback className="bg-primary/15 text-sm text-primary">
-              {user.name[0]}
+              {userName[0]}
             </AvatarFallback>
           </Avatar>
         </div>

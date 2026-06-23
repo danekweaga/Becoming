@@ -1,7 +1,7 @@
 import { Moon, Zap } from 'lucide-react'
 import { Heatmap } from '@/components/becoming/heatmap'
-import { currentSeason, moodFor } from '@/lib/mock-data'
-import { dashboardStats, getHeatmapDays } from '@/lib/dashboard-stats'
+import { moodFor } from '@/lib/mock-data'
+import type { DashboardData } from '@/lib/dashboard-db'
 import { accentHue } from '@/components/becoming/gem'
 
 function Metric({
@@ -54,10 +54,13 @@ function Metric({
   )
 }
 
-export function WellnessHeatmap() {
-  const days = getHeatmapDays()
-  const hue = accentHue[currentSeason.accent]
-  const mood = moodFor(dashboardStats.avgMood)
+type WellnessHeatmapProps = {
+  data: DashboardData
+}
+
+export function WellnessHeatmap({ data }: WellnessHeatmapProps) {
+  const hue = accentHue[data.season.accent]
+  const mood = moodFor(data.stats.avgMood)
   return (
     <section className="space-y-5">
       <div className="glass rounded-3xl p-7">
@@ -69,7 +72,7 @@ export function WellnessHeatmap() {
             Every honored day, the last 26 weeks
           </p>
         </div>
-        <Heatmap days={days} baseHue={hue} />
+        <Heatmap days={data.heatmapDays} baseHue={hue} />
       </div>
 
       <div className="glass rounded-3xl p-7">
@@ -89,7 +92,7 @@ export function WellnessHeatmap() {
           <Metric
             emoji={mood.emoji}
             label="Avg. mood"
-            value={dashboardStats.avgMood}
+            value={data.stats.avgMood}
             max={5}
             suffix=" / 5"
             hue={20}
@@ -97,7 +100,7 @@ export function WellnessHeatmap() {
           <Metric
             icon={Zap}
             label="Avg. energy"
-            value={dashboardStats.avgEnergy}
+            value={data.stats.avgEnergy}
             max={5}
             suffix=" / 5"
             hue={78}
@@ -105,7 +108,7 @@ export function WellnessHeatmap() {
           <Metric
             icon={Moon}
             label="Avg. sleep"
-            value={dashboardStats.avgSleep}
+            value={data.stats.avgSleep}
             max={9}
             suffix=" hrs"
             hue={198}
