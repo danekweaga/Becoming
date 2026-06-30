@@ -5,8 +5,11 @@ import {
   calculateHabitCompletionRate,
   calculateSeasonScore,
   createContributionHeatmapData,
+  generateWrappedCards,
   type DailyCheckin,
+  type Habit,
   type SeasonGoal,
+  type WrappedCardDraft,
 } from "@/lib/scoring";
 
 type Accent = "gold" | "teal" | "sage" | "rose" | "iris";
@@ -370,6 +373,188 @@ export async function getDashboardData(): Promise<DashboardData> {
     stats,
     heatmapDays,
     recentLogs,
+  };
+}
+
+export type WrappedData = {
+  user: { id: string; name: string };
+  vision: { year: number; word: string; statement: string };
+  season: {
+    id: string;
+    name: string;
+    accent: Accent;
+    symbol: string;
+    focus: string;
+    daysIn: number;
+    seasonScore: number;
+    gemLevel: string;
+  };
+  cards: WrappedCardDraft[];
+};
+
+/**
+ * Loads the active season for the demo user and generates Wrapped recap cards
+ * directly from Aurora data via lib/scoring. No saved cards required.
+ */
+export async function getWrappedData(): Promise<WrappedData> {
+  const user =
+    (await db.user.findUnique({ where: { email: DEMO_EMAIL } })) ??
+    (await db.user.findFirst({ orderBy: { createdAt: "asc" } }));
+
+  if (!user) {
+    throw new Error("No users found. Run `npm run db:seed` first.");
+  }
+
+  const yearlyVision =
+    (await db.yearlyVision.findFirst({
+      where: { userId: user.id, year: 2026 },
+      include: { yearlyGoals: true },
+    })) ??
+    (await db.yearlyVision.findFirst({
+      where: { userId: user.id },
+      include: { yearlyGoals: true },
+      orderBy: { year: "desc" },
+    }));
+
+  const today = new Date();
+  const seasonCandidates = await db.season.findMany({
+    where: { userId: user.id },
+    include: {
+      seasonGoals: true,
+      habits: true,
+      dailyCheckins: { include: { habitLogs: true }, orderBy: { checkinDate: "asc" } },
+    },
+    orderBy: { startDate: "asc" },
+  });
+
+  const season =
+    seasonCandidates.find(
+      (entry) => entry.startDate <= today && entry.endDate >= today,
+    ) ??
+    seasonCandidates.find((entry) => entry.name === "Summer Reset") ??
+    seasonCandidates[seasonCandidates.length - 1];
+
+  if (!season) {
+    throw new Error("No season found for user. Run `npm run db:seed`.");
+  }
+
+  const checkins: DailyCheckin[] = season.dailyCheckins.map((checkin) => ({
+    id: checkin.id,
+    checkinDate: checkin.checkinDate,
+    moodScore: clamp(checkin.moodScore ?? 6, 1, 10),
+    energyScore: clamp(checkin.energyScore ?? 6, 1, 10),
+    focusMinutes: checkin.focusMinutes,
+    waterCups: checkin.waterCups,
+    reflection: checkin.reflection,
+    habitLogs: checkin.habitLogs.map((log) => ({
+      habitId: log.habitId,
+      completed: log.completed,
+    })),
+  }));
+
+  const goals: SeasonGoal[] = season.seasonGoals.map((goal) => ({
+    id: goal.id,
+    title: goal.title,
+    category: goal.category,
+    targetValue: goal.targetValue,
+    currentValue: goal.currentValue,
+    unit: goal.unit,
+    weight: goal.weight,
+  }));
+
+  const habits: Habit[] = season.habits.map((habit) => ({
+    id: habit.id,
+    name: habit.name,
+    category: habit.category ?? "Growth",
+    targetFrequency: habit.targetFrequency ?? 1,
+    color: habit.color ?? undefined,
+  }));
+
+  const cards = generateWrappedCards({
+    season: {
+      id: season.id,
+      name: season.name,
+      startDate: season.startDate,
+      endDate: season.endDate,
+    },
+    goals,
+    habits,
+    checkins,
+  });
+
+  const seasonScore = calculateSeasonScore({ goals, checkins });
+  const accent = toAccent(season.gemType);
+
+  return {
+    user: { id: user.id, name: user.name },
+    vision: {
+      year: yearlyVision?.year ?? today.getFullYear(),
+      word: yearlyVision?.yearTheme || "Becoming",
+      statement:
+        yearlyVision?.identityStatement ||
+        "Who are you becoming this year?",
+    },
+    season: {
+      id: season.id,
+      name: season.name,
+      accent,
+      symbol: accentToSymbol(accent),
+      focus: season.seasonGoals[0]?.category ?? "Growth",
+      daysIn: daysElapsed(season.startDate, today),
+      seasonScore,
+      gemLevel: calculateGemLevel(seasonScore),
+    },
+    cards,
+  };
+}
+
+export type CheckinHabit = {
+  id: string
+  name: string
+  cadence: 'daily' | 'weekly'
+}
+
+export type CheckinContext = {
+  seasonName: string
+  habits: CheckinHabit[]
+}
+
+/**
+ * Loads the active season name and its habits so the check-in form can render
+ * real habits to toggle.
+ */
+export async function getCheckinContext(): Promise<CheckinContext> {
+  const user =
+    (await db.user.findUnique({ where: { email: DEMO_EMAIL } })) ??
+    (await db.user.findFirst({ orderBy: { createdAt: "asc" } }));
+
+  if (!user) {
+    throw new Error("No users found. Run `npm run db:seed` first.");
+  }
+
+  const today = new Date();
+  const seasons = await db.season.findMany({
+    where: { userId: user.id },
+    include: { habits: true },
+    orderBy: { startDate: "asc" },
+  });
+
+  const season =
+    seasons.find((s) => s.startDate <= today && s.endDate >= today) ??
+    seasons.find((s) => s.name === "Summer Reset") ??
+    seasons[seasons.length - 1];
+
+  if (!season) {
+    throw new Error("No season found for user. Run `npm run db:seed`.");
+  }
+
+  return {
+    seasonName: season.name,
+    habits: season.habits.map((habit) => ({
+      id: habit.id,
+      name: habit.name,
+      cadence: habit.cadence === "weekly" ? "weekly" : "daily",
+    })),
   };
 }
 

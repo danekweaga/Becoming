@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Wordmark } from '@/components/becoming/wordmark'
 import { Gem, accentHue } from '@/components/becoming/gem'
 import { user, vision, currentSeason } from '@/lib/mock-data'
-import { dashboardStats } from '@/lib/dashboard-stats'
+import { loadDemoDataAction, resetDemoDataAction } from '@/actions/demo'
 
 const stops = [
   {
@@ -87,8 +87,8 @@ export default function DemoPage() {
             “{vision.word}”
           </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            {currentSeason.name} · day {dashboardStats.daysIn} ·{' '}
-            {Math.round(dashboardStats.consistency * 100)}% consistency
+            {currentSeason.name} · a full season of real, database-backed
+            devotion
           </p>
         </div>
         <Button
@@ -101,6 +101,31 @@ export default function DemoPage() {
             </Link>
           }
         />
+      </div>
+
+      {/* Demo controls — judges can load or reset Aurora data in one click. */}
+      <div className="glass mx-auto mt-6 flex max-w-3xl flex-col items-center gap-4 rounded-3xl p-6 text-center sm:flex-row sm:text-left">
+        <div className="flex-1">
+          <p className="text-[11px] tracking-[0.25em] text-muted-foreground uppercase">
+            Demo data
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            Load Daniel&apos;s preloaded year into AWS Aurora, or reset it to a
+            clean slate. Everything you see is read live from the database.
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-3">
+          <form action={loadDemoDataAction}>
+            <Button type="submit" className="rounded-full">
+              Load demo data
+            </Button>
+          </form>
+          <form action={resetDemoDataAction}>
+            <Button type="submit" variant="outline" className="rounded-full">
+              Reset
+            </Button>
+          </form>
+        </div>
       </div>
 
       <ol className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">

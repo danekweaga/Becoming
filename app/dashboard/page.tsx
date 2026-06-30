@@ -4,6 +4,8 @@ import { WellnessHeatmap } from '@/components/dashboard/wellness-heatmap'
 import { Reflections } from '@/components/dashboard/reflections'
 import { getDashboardData } from '@/lib/dashboard-db'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage() {
   const dashboardData = await getDashboardData()
 
