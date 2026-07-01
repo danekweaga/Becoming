@@ -68,6 +68,7 @@ export type DashboardData = {
   user: {
     id: string;
     name: string;
+    memberSince: string;
   };
   vision: {
     id: string;
@@ -165,12 +166,13 @@ function isoDay(date: Date): string {
 }
 
 /**
- * Builds a continuous, week-aligned heatmap grid for the whole year so the
- * "constellation of devotion" always spans Jan–Dec. Days with a check-in are
- * lit by their completion level; every other day renders as an empty cell.
+ * Builds a continuous, week-aligned heatmap from account creation through the
+ * end of the vision year. Days with a check-in are lit; earlier days in the
+ * grid (before the account existed) stay empty.
  */
 function buildYearHeatmap(
   year: number,
+  accountCreatedAt: Date,
   checkins: DailyCheckin[],
   habitCount: number,
 ): DashboardHeatmapDay[] {
@@ -182,10 +184,15 @@ function buildYearHeatmap(
     });
   }
 
-  // Start on the Sunday on/before Jan 1, end on the Saturday on/after Dec 31,
-  // so each column is a clean Sun–Sat week for the grid + month labels.
-  const start = new Date(Date.UTC(year, 0, 1));
+  const createdDay = isoDay(accountCreatedAt);
+
+  const created = new Date(accountCreatedAt);
+  const start = new Date(
+    Date.UTC(created.getUTCFullYear(), created.getUTCMonth(), created.getUTCDate()),
+  );
   start.setUTCDate(start.getUTCDate() - start.getUTCDay());
+
+  // Week-aligned end: Saturday on/after Dec 31 of the vision year.
   const end = new Date(Date.UTC(year, 11, 31));
   end.setUTCDate(end.getUTCDate() + (6 - end.getUTCDay()));
 
@@ -197,6 +204,11 @@ function buildYearHeatmap(
   ) {
     const key = isoDay(cursor);
     const hit = byDate.get(key);
+    // Before account existed: always empty (no retroactive devotion).
+    if (key < createdDay) {
+      days.push({ date: key, level: 0, count: 0 });
+      continue;
+    }
     days.push({ date: key, level: hit?.level ?? 0, count: hit?.count ?? 0 });
   }
 
@@ -361,6 +373,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const heatmapDays: DashboardHeatmapDay[] = buildYearHeatmap(
     yearlyVision.year,
+    user.createdAt,
     checkinsForScoring,
     currentSeason.habits.length,
   );
@@ -399,6 +412,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     user: {
       id: user.id,
       name: user.name,
+      memberSince: user.createdAt.toISOString().slice(0, 10),
     },
     vision: {
       id: yearlyVision.id,

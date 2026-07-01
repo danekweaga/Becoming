@@ -69,7 +69,12 @@ export function WellnessHeatmap({ data }: WellnessHeatmapProps) {
             Your constellation of devotion
           </h2>
           <p className="text-sm text-muted-foreground">
-            Every honored day across {data.vision.year}
+            Since{' '}
+            {new Date(data.user.memberSince + 'T12:00:00').toLocaleDateString(
+              'en-US',
+              { month: 'long', day: 'numeric', year: 'numeric' },
+            )}{' '}
+            · through {data.vision.year}
           </p>
         </div>
         <Heatmap days={data.heatmapDays} baseHue={hue} />

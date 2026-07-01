@@ -52,9 +52,28 @@ export default function OnboardingPage() {
     (step === 2 && statement.trim().length > 8) ||
     (step === 3 && themes.length > 0)
 
+  const advanceHint =
+    step === 0 && name.trim().length === 0
+      ? 'Enter your name to continue.'
+      : step === 1 && word.trim().length === 0
+        ? 'Choose a word for your year to continue.'
+        : step === 2 && statement.trim().length <= 8
+          ? 'Write a little more about your vision (at least 9 characters).'
+          : step === 3 && themes.length === 0
+            ? 'Pick at least one theme to continue.'
+            : null
+
   const next = () => {
+    if (!canAdvance) return
     if (step < steps.length - 1) setStep((s) => s + 1)
     else router.push('/season/new')
+  }
+
+  const handleAdvanceKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && canAdvance) {
+      event.preventDefault()
+      next()
+    }
   }
   const back = () => setStep((s) => Math.max(0, s - 1))
 
@@ -128,6 +147,7 @@ export default function OnboardingPage() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onKeyDown={handleAdvanceKeyDown}
                   placeholder="Daniel"
                   className="h-11 bg-background/40 text-base"
                 />
@@ -150,6 +170,7 @@ export default function OnboardingPage() {
                   id="word"
                   value={word}
                   onChange={(e) => setWord(e.target.value)}
+                  onKeyDown={handleAdvanceKeyDown}
                   placeholder="Devotion, Courage, Bloom…"
                   className="h-11 bg-background/40 text-center font-serif text-xl tracking-wide"
                 />
@@ -219,24 +240,35 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          <div className="mt-9 flex items-center justify-between gap-3">
-            <Button
-              variant="ghost"
-              onClick={back}
-              disabled={step === 0}
-              className="text-muted-foreground"
-            >
-              <ArrowLeft className="size-4" />
-              Back
-            </Button>
-            <Button
-              onClick={next}
-              disabled={!canAdvance}
-              className="gem-glow bg-primary px-6 text-primary-foreground hover:bg-primary/90"
-            >
-              {step === steps.length - 1 ? 'Shape your first season' : 'Continue'}
-              <ArrowRight className="size-4" />
-            </Button>
+          <div className="mt-9 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                nativeButton
+                onClick={back}
+                disabled={step === 0}
+                className="text-muted-foreground"
+              >
+                <ArrowLeft className="size-4" />
+                Back
+              </Button>
+              <Button
+                type="button"
+                nativeButton
+                onClick={next}
+                disabled={!canAdvance}
+                className="gem-glow bg-primary px-6 text-primary-foreground hover:bg-primary/90"
+              >
+                {step === steps.length - 1 ? 'Shape your first season' : 'Continue'}
+                <ArrowRight className="size-4" />
+              </Button>
+            </div>
+            {advanceHint && (
+              <p className="text-center text-xs text-muted-foreground" role="status">
+                {advanceHint}
+              </p>
+            )}
           </div>
         </div>
       </div>
