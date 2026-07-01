@@ -69,7 +69,7 @@ export function WellnessHeatmap({ data }: WellnessHeatmapProps) {
             Your constellation of devotion
           </h2>
           <p className="text-sm text-muted-foreground">
-            Every honored day, the last 26 weeks
+            Every honored day across {data.vision.year}
           </p>
         </div>
         <Heatmap days={data.heatmapDays} baseHue={hue} />

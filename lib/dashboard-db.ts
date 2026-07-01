@@ -160,6 +160,49 @@ function computeHabitStreak(
   return streak;
 }
 
+function isoDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Builds a continuous, week-aligned heatmap grid for the whole year so the
+ * "constellation of devotion" always spans Jan–Dec. Days with a check-in are
+ * lit by their completion level; every other day renders as an empty cell.
+ */
+function buildYearHeatmap(
+  year: number,
+  checkins: DailyCheckin[],
+  habitCount: number,
+): DashboardHeatmapDay[] {
+  const byDate = new Map<string, { level: number; count: number }>();
+  for (const entry of createContributionHeatmapData(checkins)) {
+    byDate.set(entry.date, {
+      level: entry.level,
+      count: Math.round((entry.completionRate / 100) * Math.max(1, habitCount)),
+    });
+  }
+
+  // Start on the Sunday on/before Jan 1, end on the Saturday on/after Dec 31,
+  // so each column is a clean Sun–Sat week for the grid + month labels.
+  const start = new Date(Date.UTC(year, 0, 1));
+  start.setUTCDate(start.getUTCDate() - start.getUTCDay());
+  const end = new Date(Date.UTC(year, 11, 31));
+  end.setUTCDate(end.getUTCDate() + (6 - end.getUTCDay()));
+
+  const days: DashboardHeatmapDay[] = [];
+  for (
+    const cursor = new Date(start);
+    cursor <= end;
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  ) {
+    const key = isoDay(cursor);
+    const hit = byDate.get(key);
+    days.push({ date: key, level: hit?.level ?? 0, count: hit?.count ?? 0 });
+  }
+
+  return days;
+}
+
 function buildHabitCompletionRates(
   checkins: DailyCheckin[],
   habitIds: string[],
@@ -316,14 +359,11 @@ export async function getDashboardData(): Promise<DashboardData> {
     }),
   };
 
-  const heatmapDays: DashboardHeatmapDay[] =
-    createContributionHeatmapData(checkinsForScoring).map((entry) => ({
-      date: entry.date,
-      level: entry.level,
-      count: Math.round(
-        (entry.completionRate / 100) * Math.max(1, currentSeason.habits.length),
-      ),
-    }));
+  const heatmapDays: DashboardHeatmapDay[] = buildYearHeatmap(
+    yearlyVision.year,
+    checkinsForScoring,
+    currentSeason.habits.length,
+  );
 
   const recentLogs: DashboardLog[] = [...season.dailyCheckins]
     .sort((a, b) => b.checkinDate.getTime() - a.checkinDate.getTime())
