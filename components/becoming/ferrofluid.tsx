@@ -263,6 +263,7 @@ export default function Ferrofluid({
     canvas.style.width = '100%'
     canvas.style.height = '100%'
     canvas.style.display = 'block'
+    canvas.style.pointerEvents = 'none'
     container.appendChild(canvas)
 
     const { arr, count, avg } = prepColors(colors)
@@ -389,7 +390,7 @@ export default function Ferrofluid({
   return (
     <div
       ref={containerRef}
-      className={className}
+      className={className ? `pointer-events-none ${className}` : 'pointer-events-none'}
       style={{
         position: 'relative',
         width: '100%',

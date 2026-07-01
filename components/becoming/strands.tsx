@@ -2,6 +2,7 @@
 
 import { Renderer, Program, Mesh, Color, Triangle, RenderTarget } from 'ogl'
 import { useEffect, useRef } from 'react'
+import { cn } from '@/lib/utils'
 
 const MAX_STRANDS = 12
 const MAX_COLORS = 8
@@ -329,6 +330,7 @@ export default function Strands({
     const glassMesh = new Mesh(gl, { geometry, program: glassProgram })
 
     ctn.appendChild(gl.canvas)
+    gl.canvas.style.pointerEvents = 'none'
 
     function resize() {
       if (!ctn) return
@@ -393,7 +395,7 @@ export default function Strands({
   return (
     <div
       ref={ctnDom}
-      className={className}
+      className={cn('pointer-events-none', className)}
       style={{ position: 'relative', width: '100%', height: '100%', ...style }}
     />
   )

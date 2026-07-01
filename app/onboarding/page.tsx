@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -81,7 +81,7 @@ export default function OnboardingPage() {
     <main className="relative flex min-h-screen flex-col overflow-hidden px-4 py-6">
       {/* Calm woven-light backdrop for the vision ritual */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[60vh] opacity-40 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_25%,black,transparent_75%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[60vh] opacity-40 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_25%,black,transparent_75%)]"
         aria-hidden="true"
       >
         <Strands
@@ -96,7 +96,7 @@ export default function OnboardingPage() {
         />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-5xl items-center justify-between">
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between">
         <Wordmark />
         <Button
           variant="ghost"
@@ -105,7 +105,7 @@ export default function OnboardingPage() {
         />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-xl flex-1 flex-col justify-center py-10">
+      <div className="relative z-10 mx-auto flex w-full max-w-xl flex-1 flex-col justify-center py-10">
         {/* progress */}
         <div className="mb-10 flex items-center gap-2">
           {steps.map((label, i) => (
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        <div className="glass-strong relative rounded-3xl p-8 sm:p-10">
+        <div className="glass-strong relative isolate z-10 rounded-3xl p-8 sm:p-10">
           <div className="mb-7 flex justify-center">
             <Gem size={72} hue={78} />
           </div>
@@ -242,27 +242,30 @@ export default function OnboardingPage() {
 
           <div className="mt-9 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                nativeButton
                 onClick={back}
                 disabled={step === 0}
-                className="text-muted-foreground"
+                className={buttonVariants({
+                  variant: 'ghost',
+                  className: 'text-muted-foreground',
+                })}
               >
                 <ArrowLeft className="size-4" />
                 Back
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                nativeButton
                 onClick={next}
                 disabled={!canAdvance}
-                className="gem-glow bg-primary px-6 text-primary-foreground hover:bg-primary/90"
+                className={buttonVariants({
+                  className:
+                    'gem-glow bg-primary px-6 text-primary-foreground hover:bg-primary/90',
+                })}
               >
                 {step === steps.length - 1 ? 'Shape your first season' : 'Continue'}
                 <ArrowRight className="size-4" />
-              </Button>
+              </button>
             </div>
             {advanceHint && (
               <p className="text-center text-xs text-muted-foreground" role="status">
