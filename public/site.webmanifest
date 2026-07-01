@@ -1,0 +1,23 @@
+{
+  "name": "Becoming",
+  "short_name": "Becoming",
+  "description": "Who are you becoming this year?",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#15171f",
+  "theme_color": "#15171f",
+  "icons": [
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

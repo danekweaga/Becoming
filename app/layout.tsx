@@ -18,7 +18,14 @@ export const metadata: Metadata = {
   title: 'Becoming — Who are you becoming this year?',
   description:
     'A calm, cinematic personal growth dashboard. Set a yearly vision, break it into seasonal chapters, track daily habits and wellness, and unlock your Year of Becoming.',
-  generator: 'v0.app',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
 }
 
 export const viewport: Viewport = {
