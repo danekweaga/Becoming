@@ -2,237 +2,252 @@
 
 **Who are you becoming this year?**
 
-[Live demo](https://becoming-nine.vercel.app) · [Guided demo flow](https://becoming-nine.vercel.app/demo)
-
-Becoming is a personal growth dashboard that treats self-improvement as a story — not a checklist. Users set a yearly vision, live it through seasonal chapters, log daily check-ins, and unlock Wrapped-style recaps that show what actually changed.
-
-Built for the H0 AWS/Vercel hackathon. The core loop is real: data lives in AWS Aurora PostgreSQL, flows through Prisma, and powers a live dashboard — not hardcoded mock numbers.
+[Live demo](https://becoming-nine.vercel.app) · [Demo walkthrough](https://becoming-nine.vercel.app/demo)
 
 ---
 
 ## 1. Overview
 
 **What it is**  
-A calm, cinematic web app for yearly vision, seasonal goals, daily habits, wellness check-ins, and end-of-season recaps.
+Becoming is a personal growth dashboard built around one question: who are you becoming this year? Users define a yearly vision, break it into seasonal chapters, log a daily check-in ritual, and review progress on a live dashboard. At the end of a season, Wrapped turns the same data into a recap — strongest habit, focus hours, mood patterns, what slipped.
 
 **Who it is for**  
-Students, young professionals, and self-improvement users who think in chapters — exam season, summer reset, career arc — not isolated streaks.
+People who already track habits or journal but feel like they're collecting data without a story. Students in exam season. Young professionals in a "reset year." Anyone who thinks in arcs, not endless streaks.
 
 **What problem it solves**  
-Most habit apps track tasks. Becoming tracks *identity change over time*: who you said you would become, what you did about it, and whether the season added up to something real.
+Habit trackers answer *did you do the thing?* Becoming tries to answer *did the season add up to the person you said you'd become?* That requires tying vision → season goals → daily logs → aggregated score → reflection. Most apps stop at the daily log.
 
 ---
 
 ## 2. Why This Exists
 
-People do not experience growth as fifty unrelated checkboxes. They experience it as:
+Personal growth tools split the problem wrong.
 
-- “This is my reset year.”
-- “This is exam season.”
-- “This is the gym arc.”
+A streak app gives you a number. Notion gives you a blank page. A wellness app gives you mood charts with no connection to your goals. None of them model how people actually talk about their lives: *"This is my summer reset." "This is the year I get disciplined."*
 
-Existing tools are either too shallow (streak counters), too scattered (Notion + five other apps), or too guilt-driven to keep using. You can log habits every day and still have no answer to: *Did I actually become who I intended?*
+The gap is not missing features. It is missing **structure across time** — year, season, day — and a way to **look back** and see whether the arc went anywhere.
 
-Becoming exists to close that gap — structure without shame, progress you can *see*, and a recap worth sitting with at the end of a season.
+Becoming is an attempt to build that structure without turning self-improvement into guilt-driven homework.
 
 ---
 
 ## 3. Core Idea
 
-**Growth as chapters, not chores.**
+**Three horizons, one thread of data.**
 
-The product is organized around three time horizons:
+| Horizon | User question | In the app |
+|---------|---------------|------------|
+| Year | Who am I becoming? | Vision, word, yearly goals |
+| Season | What chapter am I in right now? | Season identity, habits, season goals, gem metaphor |
+| Day | Did I show up today? | Check-in: habits, mood, energy, focus, reflection |
 
-1. **Year** — one vision, one word, measurable yearly goals  
-2. **Season** — a 90-day chapter with its own identity, habits, and gemstone metaphor  
-3. **Day** — a short check-in ritual that seals the day and feeds the dashboard  
+Everything downstream — season score, gem level (Rough Stone → Radiant Gem), heatmap, Wrapped cards — is computed from the same check-in and goal data. There is no separate "analytics pipeline." The recap is not hand-authored copy; it is derived.
 
-The emotional hook is not “complete your checklist.” It is:
-
-> Look how far you’ve come. See who you’re becoming.
-
-That is why Wrapped exists — the same data that powers the dashboard becomes a cinematic recap: strongest habit, best week, mood patterns, missed opportunities, final reflection.
+The product bet: people will keep showing up if progress feels like a story worth finishing, not a streak they are afraid to break.
 
 ---
 
 ## 4. Key Features
 
-| Feature | What it does |
-|--------|----------------|
-| **Yearly vision** | Anchor the year with a theme, identity statement, and goal categories |
-| **Seasonal chapters** | Break the year into seasons, each with focus, habits, and a gem identity |
-| **Daily check-in** | Log mood, energy, focus, water, habits, and reflection — saved to the database |
-| **Live dashboard** | Season score, gem level, goal pace, habit completion, contribution heatmap, recent reflections |
-| **Wrapped recap** | Story cards generated from real check-in data — season score, strongest habit, focus hours, mood pattern, and more |
-| **Demo mode** | One-click load or reset of preloaded demo data for judges and first-time visitors |
-| **Custom scoring** | Weighted season score from habits (40%), goals (25%), focus (15%), mood/energy (10%), reflection (10%) |
+**Yearly vision**  
+A theme, identity statement, and categorized yearly goals. This is the anchor — every season and check-in is supposed to connect back to it.
+
+**Seasonal chapters**  
+Each season has a name, date range, focus area, habits, and weighted season goals. The UI uses a gemstone metaphor (Citrine, Aquamarine, etc.) as a visual identity for the chapter, not just a progress bar.
+
+**Daily check-in**  
+A short ritual: mood, energy, focus minutes, water, which habits were honored, a reflection. Submitting writes to `daily_checkins` and `habit_logs` in Aurora and redirects to the dashboard so the user immediately sees the impact.
+
+**Live dashboard**  
+Season score, gem level, days in season, habit completion rates, contribution heatmap, recent reflections. All numbers come from `getDashboardData()` querying Aurora — not from `lib/mock-data.ts`.
+
+**Wrapped recap**  
+`generateWrappedCards()` in `lib/scoring.ts` produces story cards: season score, strongest habit, best week, total focus hours, mood pattern, biggest miss, most improved category, closing message. Season Wrapped is fully data-driven.
+
+**Demo controls**  
+`/demo` can load or reset Daniel's prebuilt dataset via server actions. Judges get a clean path: load data → dashboard → check-in → wrapped in under two minutes.
+
+**Scoring engine**  
+Season score is a weighted blend: 40% habit completion, 25% goal progress, 15% focus consistency, 10% mood/energy, 10% reflection consistency. The weights live in one module so they can be tuned without touching SQL or React.
 
 ---
 
 ## 5. Architecture & Tech Stack
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| **Framework** | Next.js 16 (App Router) | Server Components for reads, Server Actions for writes — one codebase, no separate API server. Native fit for Vercel. |
-| **Language** | TypeScript | Shared types from Prisma models through scoring logic to UI props. Fewer shape mismatches in a data-heavy dashboard. |
-| **UI** | React 19, Tailwind CSS 4, shadcn/ui | Fast iteration on a premium dark UI without fighting a component library. |
-| **Database** | AWS Aurora PostgreSQL | Hackathon requirement + production-grade relational data for users, visions, seasons, check-ins, and logs. |
-| **ORM** | Prisma 7 | Schema-as-code, migrations, type-safe queries. |
-| **Driver** | `@prisma/adapter-pg` + `pg` | Prisma 7’s client engine requires a driver adapter for PostgreSQL. Explicit TLS config for Aurora. |
-| **Hosting** | Vercel | Zero-config Next.js deploy; `DATABASE_URL` in environment for production Aurora access. |
-| **Business logic** | `lib/scoring.ts` | Pure calculation layer — testable without the database or React. |
+I chose the stack for shipping speed and for how the hackathon would be judged: real database, real deployment, real user loop.
+
+**Next.js 16 (App Router)** — Frontend and backend in one repo. Server Components fetch dashboard data on the server (no client-side loading spinners for the main view). Server Actions handle check-in submission and demo seeding without building a REST API nobody asked for.
+
+**TypeScript** — The app moves a lot of shaped data: Prisma rows → scoring types → dashboard props → Wrapped slides. Typing that pipeline caught several mismatches early (e.g. mood on a 1–5 UI scale vs 1–10 in the database).
+
+**Tailwind CSS 4 + shadcn/ui** — Utility-first styling for a dark, glass-panel UI. shadcn gives accessible primitives; custom components (`Gem`, `Strands`, heatmap) carry the brand.
+
+**AWS Aurora PostgreSQL** — Required for the hackathon and the right fit for relational data: users own visions, visions have seasons, seasons have habits and check-ins, check-ins have habit logs. That is a graph, not a document.
+
+**Prisma 7 + `@prisma/adapter-pg`** — Schema migrations, generated client, type-safe queries. Prisma 7's client engine requires a driver adapter for PostgreSQL; the migration CLI and the runtime client are configured separately (`prisma.config.ts` vs `lib/db.ts`).
+
+**Vercel** — Deploy target matches Next.js. `DATABASE_URL` in Vercel env points at Aurora in production.
+
+**`lib/scoring.ts` (pure logic)** — Deliberately not inside React components or Prisma models. Dashboard reads and Wrapped generation both import the same functions. Tests run with `npm run test:scoring` without a database.
 
 ```text
-Browser
-  → Next.js (Server Components + Server Actions)
-  → lib/dashboard-db.ts (queries)
-  → lib/scoring.ts (calculations)
-  → Prisma + pg adapter
-  → AWS Aurora PostgreSQL
+┌─────────────┐     ┌──────────────────────────────────┐     ┌─────────────┐
+│   Browser   │────▶│  Vercel / Next.js                │────▶│   Aurora    │
+│             │     │  Server Components (read)        │     │ PostgreSQL  │
+│             │     │  Server Actions (write)          │     │             │
+│             │     │  lib/dashboard-db.ts → queries   │     │ 9 tables    │
+│             │     │  lib/scoring.ts → calculations   │     │             │
+│             │     │  Prisma + pg adapter (TLS)       │     │             │
+└─────────────┘     └──────────────────────────────────┘     └─────────────┘
 ```
 
-See [`docs/architecture-diagram.md`](docs/architecture-diagram.md) for the full diagram.
+Full diagram: [`docs/architecture-diagram.md`](docs/architecture-diagram.md)
 
 ---
 
 ## 6. How It Works
 
-### User journey
+### What a user does
 
-1. **Land** on the marketing page — understand the product in one sentence.  
-2. **Load demo** at `/demo` — seed Daniel’s year into Aurora (or use existing data).  
-3. **Dashboard** — see season score, gem level, habits, heatmap, and reflections pulled from the database.  
-4. **Check-in** — submit mood, energy, focus, water, habits, reflection; redirect to dashboard with updated numbers.  
-5. **Wrapped** — play “This Season’s Becoming” — recap cards generated from the same Aurora data.
+1. Open [becoming-nine.vercel.app/demo](https://becoming-nine.vercel.app/demo) and click **Load demo data** (seeds Daniel's year into Aurora).
+2. Open **Dashboard** — season score, gem, heatmap, habits reflect stored check-ins.
+3. Open **Check-in** — log today, seal the day, land back on dashboard with updated stats.
+4. Open **Wrapped** — play the season recap generated from the same records.
 
-### Data flow (check-in example)
+Onboarding and season-creation pages exist in the UI but do not write to the database yet (see Limitations).
+
+### What the system does on check-in
 
 ```text
-User submits /check-in form
-  → submitCheckin() server action
-  → upsert daily_checkins row
-  → rebuild habit_logs for that day
-  → revalidatePath('/dashboard', '/wrapped')
-  → redirect to /dashboard
-  → getDashboardData() reads season + check-ins from Aurora
-  → calculateSeasonScore() + heatmap + gem level
-  → render updated UI
+1. User submits form on /check-in
+2. submitCheckin() (actions/check-in.ts)
+     - Resolve active season for demo user
+     - Upsert daily_checkins for today (mood ×2, energy ×2 for 1–10 scale)
+     - Delete + recreate habit_logs for selected habits
+3. revalidatePath('/dashboard', '/wrapped')
+4. redirect('/dashboard')
+5. Dashboard page calls getDashboardData()
+     - Prisma: user → vision → season → check-ins + habit_logs
+     - Map rows to scoring types
+     - calculateSeasonScore(), createContributionHeatmapData(), etc.
+6. Server-rendered HTML with fresh numbers
 ```
 
-Wrapped uses the same read path: `getWrappedData()` → `generateWrappedCards()` — no separate “recap API.”
+Wrapped follows the same read path: `getWrappedData()` → `generateWrappedCards()`. No second query layer, no cached recap JSON.
 
 ---
 
 ## 7. Key Technical Decisions
 
-**Scoring logic lives outside the database and outside React**  
-`lib/scoring.ts` is a pure TypeScript module. The dashboard and Wrapped both call it. That means one source of truth for season score, gem tiers, streaks, and recap cards — and `npm run test:scoring` can verify behavior without spinning up Next.js.
+**Separate query layer from calculation layer**  
+`lib/dashboard-db.ts` knows about Prisma and maps database rows to UI-friendly shapes. `lib/scoring.ts` knows nothing about Prisma — only typed inputs and outputs. If the scoring formula changes, I edit one file and run tests. If the schema changes, I edit the mapper. Mixing those concerns would have made the hackathon refactor painful.
 
-**Server Components for reads, Server Actions for writes**  
-No REST layer. Dashboard and Wrapped are async server components that query Aurora directly. Check-in and demo load/reset use server actions with `revalidatePath` so the UI refreshes after mutations.
+**Server Actions instead of API routes**  
+Check-in and demo load/reset are form posts with `revalidatePath`. No fetch wrappers, no client state sync, no API versioning. Tradeoff: less portable to a mobile app later; win: less code and fewer failure modes for a web-only V1.
 
-**Single demo user for V1**  
-The hackathon deadline favored a working end-to-end loop over multi-user auth. The app hardcodes `daniel@becoming.app` as the demo identity. The schema supports many users; the application layer does not yet.
+**Single demo user (`daniel@becoming.app`)**  
+Auth would have eaten the deadline. The schema has `users` with relations; the app layer always resolves that one email (with a fallback to `findFirst`). Shipping a complete loop for one user beat shipping signup for zero users.
 
-**Dynamic routes for DB-backed pages**  
-`/dashboard`, `/check-in`, and `/wrapped` export `dynamic = 'force-dynamic'` so Next.js does not try to prerender them at build time (which would fail or stale-cache without Aurora at build).
+**`force-dynamic` on DB routes**  
+`/dashboard`, `/check-in`, `/wrapped` export `dynamic = 'force-dynamic'`. Without it, `next build` tries to prerender pages that call Aurora at build time — which fails or lies when the database is not reachable from the build environment.
 
-**Aurora TLS via explicit pg SSL**  
-Connection string `sslmode=require` alone caused certificate errors with the pg adapter. The fix: strip `sslmode` from the URL and pass `ssl: { rejectUnauthorized: false }` to `PrismaPg` — required for reliable local and Vercel connections to RDS.
+**Shared seed logic (`lib/seed-demo.ts`)**  
+The CLI seed (`npm run db:seed`) and the demo page's "Load demo data" button call the same function. One source of truth for what "Daniel's demo year" contains.
+
+**TLS handling for Aurora**  
+`sslmode=require` in the connection string alone produced `P1011` certificate errors with the pg adapter. Fix: strip `sslmode` from the URL passed to `PrismaPg` and set `ssl: { rejectUnauthorized: false }` explicitly in `lib/db.ts` and `prisma/seed.ts`.
 
 ---
 
 ## 8. Challenges & Solutions
 
-| Problem | Solution |
-|---------|----------|
-| Prisma 7 client required adapter or Accelerate | Wired `@prisma/adapter-pg` + `pg` in `lib/db.ts` |
-| Build failed prerendering `/dashboard` | `export const dynamic = 'force-dynamic'` on DB-backed routes |
-| Aurora unreachable after IP/network change | Security group inbound rule on PostgreSQL 5432 |
-| `P1011` TLS certificate errors with pg adapter | Explicit SSL config; strip conflicting `sslmode` from connection string |
-| Seed script could not load `.env.local` under tsx | `dotenv` in `prisma/seed.ts`; shared seed logic in `lib/seed-demo.ts` for CLI and server actions |
-| Duplicate `src/` scaffold confused deploy | Removed duplicate tree; single `app/` structure at repo root |
+**Prisma 7 broke the old client setup**  
+Runtime error: engine type `client` requires `adapter` or `accelerateUrl`. Removed `engineType = "binary"` from the schema, installed `@prisma/adapter-pg`, wired it in `lib/db.ts`.
+
+**Build passed compile but failed on `/dashboard`**  
+Static generation attempted a live DB connection. Marked data-dependent routes as dynamic.
+
+**Aurora reachable from Prisma CLI but not from the app**  
+Migration engine and pg adapter handle SSL differently. Required explicit adapter SSL config, not just the connection string flag.
+
+**Security group blocked after network change**  
+Laptop restart → new IP → `P1001`. Opened PostgreSQL 5432 on the RDS security group (demo used `0.0.0.0/0` so Vercel could connect too).
+
+**Duplicate `src/` folder at repo root**  
+Early scaffold left two app trees; Vercel deployed the wrong one. Deleted the duplicate, kept root `app/`.
+
+**Seed script did not load `.env.local`**  
+`tsx` does not auto-load Next.js env files. Added `dotenv` at the top of `prisma/seed.ts`.
 
 ---
 
 ## 9. Limitations
 
-This is a deliberate V1 for demo and judging — not a shipped multi-user product.
+I am explicit about these because they define what V1 actually is.
 
-- **No authentication** — everyone sees Daniel’s demo data; no signup or login.  
-- **Onboarding and season creation are UI-only** — forms exist but do not persist to Aurora yet.  
-- **Single-user application layer** — schema is multi-tenant-ready; code is not.  
-- **Year Wrapped uses some static narrative moments** — season Wrapped is fully data-driven; year recap blends DB vision data with placeholder season stories.  
-- **No payments, notifications, or health integrations** — intentionally out of scope.  
-- **Aurora security** — demo may use open `0.0.0.0/0` on port 5432; tighten before any real launch.
+- **No auth.** There is no login. Every DB path resolves to the demo user. Multi-user support is in the schema, not in the application.
+- **Onboarding and `/season/new` are presentation-only.** They look complete; they do not create records in Aurora.
+- **Year Wrapped mixes real and static content.** Season Wrapped is fully computed from check-ins. The year recap still uses some placeholder season narratives from mock data.
+- **No automated tests for UI or server actions.** Scoring logic has a test script; the rest was verified manually and in production.
+- **Aurora exposed on 5432 for demo.** Acceptable for a hackathon deadline; not acceptable for production without tightening network access.
+- **No payments, push notifications, or health API integrations.** Out of scope by design.
 
 ---
 
 ## 10. Future Improvements
 
-1. **Auth** (Clerk or NextAuth) — replace `DEMO_EMAIL` with session-scoped user ID.  
-2. **Wire onboarding + `/season/new`** — server actions to create visions and seasons for the logged-in user.  
-3. **Persist Wrapped cards** — optional `wrapped_cards` table writes for shareable recaps.  
-4. **Goal pace on dashboard** — surface `calculateGoalPace()` per season goal in the UI.  
-5. **Charts** — weekly mood and focus trends from existing check-in data.  
-6. **Tighten Aurora access** — VPC-only or IP-restricted security groups for production.
+Ordered by what would most increase "real product" feel:
+
+1. **Auth + session-scoped queries** — replace `DEMO_EMAIL` with `session.user.id` everywhere in `dashboard-db.ts` and actions.
+2. **Persist onboarding and season creation** — server actions for `YearlyVision`, `Season`, `Habit` creation from existing forms.
+3. **Goal pace on dashboard** — `calculateGoalPace()` already exists in scoring; wire it to season goal cards.
+4. **Persist Wrapped cards** — write `generateWrappedCards()` output to `wrapped_cards` for sharing and history.
+5. **Charts from existing data** — weekly mood and focus trends; no new tables required.
+6. **Lock down Aurora** — restrict security group; consider connection pooling (PgBouncer or Prisma Accelerate) if traffic grows.
 
 ---
 
-## Local Development
+## Development
 
-**Prerequisites:** Node.js 20+, AWS Aurora PostgreSQL instance, `DATABASE_URL` in `.env.local`
+**Requirements:** Node.js 20+, Aurora PostgreSQL, `DATABASE_URL` in `.env.local`
 
 ```bash
 npm install
-npx prisma migrate deploy   # or migrate dev locally
-npm run db:seed             # load Daniel demo data
-npm run dev                 # http://localhost:3000
+npx prisma migrate deploy
+npm run db:seed
+npm run dev
 ```
 
-**Scripts**
-
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Start development server |
-| `npm run build` | `prisma generate` + production build |
-| `npm run db:seed` | Seed Daniel demo user into Aurora |
-| `npm run test:scoring` | Run scoring logic tests |
-
-**Environment**
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Local dev server |
+| `npm run build` | `prisma generate && next build` |
+| `npm run db:seed` | Load Daniel demo dataset |
+| `npm run test:scoring` | Test `lib/scoring.ts` without DB |
 
 ```env
+# .env.local (do not commit)
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/becoming?sslmode=require"
 ```
 
-Do not commit `.env.local`.
-
----
-
-## Project Structure
+**Layout**
 
 ```text
-app/              Routes (dashboard, check-in, wrapped, demo, …)
-actions/          Server actions (check-in, demo load/reset)
-components/       UI including becoming/ gem, dashboard/, wrapped/
-lib/
-  scoring.ts      Season score, gem, heatmap, Wrapped generation
-  dashboard-db.ts Aurora queries → DashboardData / WrappedData
-  seed-demo.ts    Shared demo seed (CLI + server actions)
-  db.ts           Prisma client + pg adapter
-prisma/           Schema, migrations, seed entrypoint
-docs/             PRD, architecture, implementation plan
+app/                 Routes
+actions/             check-in.ts, demo.ts
+lib/scoring.ts       Pure calculation (season score, wrapped, heatmap)
+lib/dashboard-db.ts  Prisma queries → dashboard/wrapped DTOs
+lib/seed-demo.ts     Shared demo seed
+lib/db.ts            Prisma client + pg adapter
+prisma/              Schema, migrations, seed entry
+docs/                PRD, architecture diagram, implementation plan
 ```
 
 ---
 
 ## Links
 
-- **Live app:** https://becoming-nine.vercel.app  
-- **Repo:** https://github.com/danekweaga/Becoming  
+- **Production:** https://becoming-nine.vercel.app
+- **Repository:** https://github.com/danekweaga/Becoming
 
----
-
-## License
-
-Private — hackathon submission project.
+Built for the H0 AWS/Vercel hackathon — Aurora PostgreSQL, Vercel deployment, full core product loop.
